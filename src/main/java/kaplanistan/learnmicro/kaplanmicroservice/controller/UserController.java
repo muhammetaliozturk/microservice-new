@@ -1,11 +1,15 @@
 package kaplanistan.learnmicro.kaplanmicroservice.controller;
 
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
+
 import jakarta.validation.Valid;
 import kaplanistan.learnmicro.kaplanmicroservice.exception.UserNotFoundException;
 import kaplanistan.learnmicro.kaplanmicroservice.model.User;
 import kaplanistan.learnmicro.kaplanmicroservice.service.UserDaoService;
+import org.springframework.hateoas.server.mvc.WebMvcLinkBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.hateoas.EntityModel;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
@@ -27,14 +31,18 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public User getById(@PathVariable Integer id) {
+    public EntityModel<User> getById(@PathVariable Integer id) {
         var user = userDaoService.getUser(id);
 
         if (user == null) {
             throw new UserNotFoundException("userId: " + id);
         }
 
-        return user;
+        EntityModel<User> entityModel = EntityModel.of(user);
+        WebMvcLinkBuilder linkBuilder = linkTo(methodOn(this.getClass()).getAll());
+        entityModel.add(linkBuilder.withRel("all_users"));
+
+        return entityModel;
     }
 
     @PostMapping
